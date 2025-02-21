@@ -44,7 +44,7 @@ pipeline {
             }
         }
         
-        stage('Backup') {
+                stage('Backup') {
             steps {
                  sh 'docker compose push' 
             }
