@@ -1,0 +1,53 @@
+pipeline {
+    agent { label 'server1-aris' }
+
+    stages {
+        stage('Pull SCM') {
+            steps {
+                git branch: 'main', url: 'https://github.com/arisman73/simple-apps.git'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh'''
+                cd app
+                npm install
+                '''
+            }
+        }
+        
+        stage('Testing') {
+            steps {
+                sh'''
+                cd app
+                APP_PORT=5001 npm test
+                APP_PORT=5001 npm run test:coverage
+                '''
+            }
+        }
+        
+        stage('Code Review') {
+            steps {
+                sh'''
+                cd app
+                sonar-scanner   -Dsonar.projectKey=app-aris   -Dsonar.sources=.   -Dsonar.host.url=http://172.23.5.15:9000   -Dsonar.login=sqp_a7987023b2119a0a944d51220f1acd3f900d1944
+                '''
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                sh'''
+                docker compose up --build -d
+                '''
+            }
+        }
+        
+        stage('Backup') {
+            steps {
+                 sh 'docker compose push' 
+            }
+        }
+    }
+}
